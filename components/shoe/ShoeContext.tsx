@@ -1,20 +1,6 @@
 import React, { createContext, useState, useContext } from 'react';
 import { identifyShoe } from './ShoeIdentificationService';
-
-interface ShoeData {
-  brand: string;
-  model: string;
-  price: {
-    usd: number;
-    range: string;
-  };
-  releaseYear: number;
-  type: string;
-  colors: string[];
-  popularity: string;
-  description: string;
-  confidence: number;
-}
+import { ShoeData } from './GeminiService';
 
 interface ShoeContextType {
   shoeData: ShoeData | null;

@@ -7,13 +7,14 @@ import { useRouter } from 'expo-router';
 import { CameraType } from 'expo-camera/build/Camera.types';
 
 interface CameraComponentProps {
-  onImageCaptured: (imageUri: string) => void;
+  onImageCaptured: (imageUri: string) => Promise<void>;
 }
 
 export default function CameraComponent({ onImageCaptured }: CameraComponentProps) {
   const [permission, requestPermission] = useCameraPermissions();
   const [type, setType] = useState<CameraType>('back');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const cameraRef = useRef<any>(null);
   const router = useRouter();
 
@@ -29,7 +30,6 @@ export default function CameraComponent({ onImageCaptured }: CameraComponentProp
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePicture({ quality: 0.7 });
       setCapturedImage(photo.uri);
-      onImageCaptured(photo.uri);
     }
   };
 
@@ -43,7 +43,21 @@ export default function CameraComponent({ onImageCaptured }: CameraComponentProp
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       setCapturedImage(result.assets[0].uri);
-      onImageCaptured(result.assets[0].uri);
+    }
+  };
+
+  const handleAnalyzeImage = async () => {
+    if (capturedImage) {
+      try {
+        setIsAnalyzing(true);
+        await onImageCaptured(capturedImage);
+        // After analysis is complete, navigate to results
+        router.push('/shoe-results');
+      } catch (error) {
+        console.error('Error analyzing image:', error);
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   };
 
@@ -78,19 +92,20 @@ export default function CameraComponent({ onImageCaptured }: CameraComponentProp
             <TouchableOpacity 
               style={styles.button} 
               onPress={() => setCapturedImage(null)}
+              disabled={isAnalyzing}
             >
               <Ionicons name="refresh-outline" size={24} color="white" />
               <Text style={styles.buttonText}>Retake</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.button, styles.confirmButton]} 
-              onPress={() => {
-                // @ts-ignore
-                router.push('/shoe-results');
-              }}
+              onPress={handleAnalyzeImage}
+              disabled={isAnalyzing}
             >
               <Ionicons name="checkmark-outline" size={24} color="white" />
-              <Text style={styles.buttonText}>Analyze</Text>
+              <Text style={styles.buttonText}>
+                {isAnalyzing ? 'Analyzing...' : 'Analyze'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

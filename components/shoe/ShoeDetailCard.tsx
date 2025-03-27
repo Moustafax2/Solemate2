@@ -3,22 +3,10 @@ import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, Linking } 
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
+import { ShoeData } from './GeminiService';
 
 interface ShoeDetailCardProps {
-  shoeData: {
-    brand: string;
-    model: string;
-    price: {
-      usd: number;
-      range: string;
-    };
-    releaseYear: number;
-    type: string;
-    colors: string[];
-    popularity: string;
-    description: string;
-    confidence: number;
-  };
+  shoeData: ShoeData;
   imageUri: string;
 }
 
