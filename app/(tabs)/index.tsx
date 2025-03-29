@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, ScrollView, View, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, ScrollView, View, TouchableOpacity, Text, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
@@ -15,7 +15,13 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.container}>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">SoleMate</ThemedText>
+        <View style={styles.titleRow}>
+          <Image 
+            source={require('@/assets/images/SolemateLOGO.png')} 
+            style={styles.logo}
+          />
+          <ThemedText type="title">SoleMate</ThemedText>
+        </View>
         <ThemedText type="subtitle">Identify Any Shoe Instantly</ThemedText>
       </ThemedView>
 
@@ -58,18 +64,47 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </ThemedView>
 
+      <ThemedView style={styles.recentFindsContainer}>
+        <ThemedText type="title" style={styles.recentFindsTitle}>Recent Finds</ThemedText>
+        <View style={styles.recentFindsList}>
+          <View style={styles.recentFindItem}>
+            <Image 
+              source={require('@/assets/images/airforce1.png')} 
+              style={styles.sneakerImage}
+            />
+            <ThemedText style={styles.sneakerName}>Nike Air Force 1</ThemedText>
+          </View>
+          <View style={styles.recentFindItem}>
+            <Image 
+              source={require('@/assets/images/adidassamba.png')} 
+              style={styles.sneakerImage}
+            />
+            <ThemedText style={styles.sneakerName}>Adidas Samba</ThemedText>
+          </View>
+          <View style={styles.recentFindItem}>
+            <Image 
+              source={require('@/assets/images/airmax97.png')} 
+              style={styles.sneakerImage}
+            />
+            <ThemedText style={styles.sneakerName}>Nike Air Max 97</ThemedText>
+          </View>
+        </View>
+      </ThemedView>
+
       <ThemedView style={styles.infoContainer}>
-        <ThemedText type="subtitle">How It Works</ThemedText>
-        <ThemedText style={styles.infoText}>
-          SoleMate uses advanced image recognition technology to identify shoes from just a picture. 
-          Our AI can recognize thousands of shoe models and provide you with accurate information about
-          the brand, model, and current pricing.
-        </ThemedText>
-        
-        <ThemedText style={styles.infoText}>
-          Whether you're curious about someone's shoes, looking to buy a pair you just saw,
-          or want to check if you're getting a good deal, SoleMate has you covered.
-        </ThemedText>
+        <ThemedText type="title" style={styles.infoTitle}>How It Works</ThemedText>
+        <View style={styles.infoCard}>
+          <ThemedText style={styles.infoText}>
+            SoleMate uses advanced image recognition technology to identify shoes from just a picture. 
+            Our AI can recognize thousands of shoe models and provide you with accurate information about
+            the brand, model, and current pricing.
+          </ThemedText>
+          
+          <ThemedText style={styles.infoText}>
+            Whether you're curious about someone's shoes, looking to buy a pair you just saw,
+            or want to check if you're getting a good deal, SoleMate has you covered.
+          </ThemedText>
+        </View>
       </ThemedView>
     </ScrollView>
   );
@@ -81,9 +116,18 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingTop: 80,
     paddingBottom: 20,
     alignItems: 'center',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  logo: {
+    width: 40,
+    height: 40,
   },
   featureContainer: {
     padding: 20,
@@ -126,12 +170,58 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 10,
   },
+  recentFindsContainer: {
+    padding: 20,
+    marginBottom: 20,
+  },
+  recentFindsTitle: {
+    marginBottom: 15,
+  },
+  recentFindsList: {
+    gap: 20,
+  },
+  recentFindItem: {
+    alignItems: 'flex-start',
+  },
+  sneakerImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  sneakerName: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
   infoContainer: {
     padding: 20,
     marginBottom: 30,
+    backgroundColor: 'rgba(33, 150, 243, 0.05)',
+    borderRadius: 15,
+    marginHorizontal: 10,
+  },
+  infoTitle: {
+    marginBottom: 20,
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  infoCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   infoText: {
-    marginTop: 10,
+    marginTop: 15,
     lineHeight: 24,
+    fontSize: 16,
+    color: '#444',
   },
 });
