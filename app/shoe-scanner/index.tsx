@@ -1,12 +1,15 @@
 import React from 'react';
-import { StyleSheet, View, Text, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import CameraComponent from '@/components/camera/CameraComponent';
 import { useShoe } from '@/components/shoe/ShoeContext';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 export default function ShoeScanner() {
   const { captureImage, isLoading, error } = useShoe();
+  const router = useRouter();
 
   const handleImageCaptured = async (imageUri: string) => {
     await captureImage(imageUri);
@@ -19,6 +22,14 @@ export default function ShoeScanner() {
           title: 'Shoe Scanner',
           headerTransparent: true,
           headerTintColor: 'white',
+          headerLeft: () => (
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#2196F3" />
+            </TouchableOpacity>
+          ),
         }}
       />
       <StatusBar style="light" />
@@ -68,5 +79,9 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'white',
     textAlign: 'center',
+  },
+  backButton: {
+    marginLeft: 16,
+    padding: 8,
   },
 }); 
