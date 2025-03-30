@@ -17,7 +17,7 @@ export default function HomeScreen() {
       <ThemedView style={styles.titleContainer}>
         <View style={styles.titleRow}>
           <Image 
-            source={require('@/assets/images/SolemateLOGO.png')} 
+            source={require('@/assets/images/SolemateLOGO_RED.png')} 
             style={styles.logo}
           />
           <ThemedText type="title">SoleMate</ThemedText>
@@ -28,7 +28,7 @@ export default function HomeScreen() {
       <ThemedView style={styles.featureContainer}>
         <View style={styles.feature}>
           <View style={styles.featureIconContainer}>
-            <Ionicons name="camera-outline" size={30} color="#2196F3" />
+            <Ionicons name="camera-outline" size={30} color="white" />  
           </View>
           <View style={styles.featureTextContainer}>
             <ThemedText type="defaultSemiBold">Snap a Photo</ThemedText>
@@ -38,7 +38,7 @@ export default function HomeScreen() {
 
         <View style={styles.feature}>
           <View style={styles.featureIconContainer}>
-            <Ionicons name="search-outline" size={30} color="#2196F3" />
+            <Ionicons name="search-outline" size={30} color="white" />
           </View>
           <View style={styles.featureTextContainer}>
             <ThemedText type="defaultSemiBold">AI Recognition</ThemedText>
@@ -48,7 +48,7 @@ export default function HomeScreen() {
 
         <View style={styles.feature}>
           <View style={styles.featureIconContainer}>
-            <Ionicons name="information-circle-outline" size={30} color="#2196F3" />
+            <Ionicons name="information-circle-outline" size={30} color="white" />
           </View>
           <View style={styles.featureTextContainer}>
             <ThemedText type="defaultSemiBold">Get Details</ThemedText>
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+    backgroundColor: 'rgb(227, 41, 36)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   scanButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: 'rgb(227, 41, 36)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     padding: 20,
     marginBottom: 30,
-    backgroundColor: 'rgba(33, 150, 243, 0.05)',
+    backgroundColor: 'rgba(227, 41, 36, 0.07)',
     borderRadius: 15,
     marginHorizontal: 10,
   },
