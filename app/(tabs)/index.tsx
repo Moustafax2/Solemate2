@@ -19,6 +19,7 @@ export default function HomeScreen() {
           <Image 
             source={require('@/assets/images/SolemateLOGO_RED.png')} 
             style={styles.logo}
+            tintColor="rgb(227, 41, 36)"
           />
           <ThemedText type="title">SoleMate</ThemedText>
         </View>
