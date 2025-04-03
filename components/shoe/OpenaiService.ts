@@ -1,8 +1,6 @@
-import { GoogleGenerativeAI, Part } from '@google/generative-ai';
+import OpenAI from "openai";
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
-// Import from .env file - NOTE: This doesn't seem to be working correctly
-// import { GEMINI_API_KEY } from '@env';
 
 // Define types for shoe data
 export interface ShoeData {
@@ -20,14 +18,14 @@ export interface ShoeData {
   confidence: number;
 }
 
-// Use this shared API key for the SoleMate app
+// Use this shared API key for the SoleMate app (same approach as Gemini)
 // IMPORTANT: In a real production app, this would be better handled through a backend
-// to avoid exposing API keys in client-side code
-// DEVELOPMENT: For GitHub, replace the key with PLACEHOLDER before committing
-const API_KEY = 'keyhere'; // DO NOT commit real API key to GitHub
+const OPENAI_API_KEY = 'keyhere'; // DO NOT commit real API key to GitHub
 
-// Initialize the Gemini API client
-const genAI = new GoogleGenerativeAI(API_KEY);
+// Initialize the OpenAI client
+const openai = new OpenAI({
+  apiKey: OPENAI_API_KEY,
+});
 
 /**
  * Convert a local image URI to a base64 string
@@ -49,19 +47,15 @@ async function imageToBase64(uri: string): Promise<string> {
 }
 
 /**
- * Identify a shoe using Gemini Vision
+ * Identify a shoe using OpenAI's Vision API
  */
-export async function identifyShoeWithGemini(imageUri: string): Promise<ShoeData> {
+export async function identifyShoeWithOpenAI(imageUri: string): Promise<ShoeData> {
   try {
     // Convert the image to base64
     const base64Image = await imageToBase64(imageUri);
     
-    // Create a model instance with the new Gemini model
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    
     // Prepare the prompt for shoe identification
-    const prompt = `Identify this shoe in the image.
-    Provide detailed information in the following JSON format only:
+    const prompt = `Identify this shoe in the image. Provide detailed information in the following JSON format only:
     {
       "brand": "Brand name",
       "model": "Model name",
@@ -79,33 +73,43 @@ export async function identifyShoeWithGemini(imageUri: string): Promise<ShoeData
     
     If you cannot identify the shoe, provide your best guess and set confidence accordingly.
     DO NOT include any other text in your response, only valid JSON.`;
+
+    // Make API call using GPT-4 Vision
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 1000,
+    });
+
+    // Extract the response text
+    const responseText = response.choices[0].message.content || "";
     
-    // Create image part
-    const imagePart: Part = {
-      inlineData: {
-        data: base64Image,
-        mimeType: 'image/jpeg',
-      },
-    };
-    
-    // Generate content
-    const result = await model.generateContent([prompt, imagePart]);
-    const response = await result.response;
-    const text = response.text();
-    
-    // Parse JSON from response
-    // Extract JSON part from the response (in case there's extra text)
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    // Extract JSON from the response (in case there's extra text)
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     
     if (!jsonMatch) {
       throw new Error("Failed to extract JSON from response");
     }
     
+    // Parse the JSON
     const shoeData: ShoeData = JSON.parse(jsonMatch[0]);
-    
     return shoeData;
+    
   } catch (error) {
-    console.error('Error identifying shoe with Gemini:', error);
+    console.error('Error identifying shoe with OpenAI:', error);
     
     // Return a fallback response if there's an error
     return {
@@ -124,8 +128,8 @@ export async function identifyShoeWithGemini(imageUri: string): Promise<ShoeData
     };
   }
 }
-
-// For testing purposes or when API is unavailable, use this mock function
+ 
+// Mock function, similar to before, for testing purposes when API is unavailable
 export function getMockShoeData(): ShoeData {
   return {
     brand: "Nike",
@@ -141,4 +145,4 @@ export function getMockShoeData(): ShoeData {
     description: "The Air Jordan 1 Retro High OG 'University Blue' features a University Blue leather upper with black and white accents throughout the shoe. A white midsole and black outsole complete the design.",
     confidence: 0.92,
   };
-} 
+}
