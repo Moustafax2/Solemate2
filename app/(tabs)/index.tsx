@@ -12,9 +12,23 @@ export default function HomeScreen() {
     router.push('/(tabs)/scanner');
   };
 
+  const handleProfilePress = () => {
+    router.push('/profile');
+  };
+
   return (
     <ScrollView style={styles.container}>
+  
       <ThemedView style={styles.titleContainer}>
+
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.profileButton}
+          onPress={handleProfilePress}
+        >
+          <Ionicons name="person-circle-outline" size={32} color="rgb(227, 41, 36)" />
+        </TouchableOpacity>
+      </View>
         <View style={styles.titleRow}>
           <Image 
             source={require('@/assets/images/SolemateLOGO_RED.png')} 
@@ -66,7 +80,7 @@ export default function HomeScreen() {
       </ThemedView>
 
       <ThemedView style={styles.recentFindsContainer}>
-        <ThemedText type="title" style={styles.recentFindsTitle}>Recent Finds</ThemedText>
+        <ThemedText type="title" style={styles.recentFindsTitle}>Community Finds</ThemedText>
         <View style={styles.recentFindsList}>
           <View style={styles.recentFindItem}>
             <Image 
@@ -115,9 +129,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    zIndex: 1,
+  },
+  profileButton: {
+    padding: 10,
+    backgroundColor: 'rgba(227, 41, 36, 0.1)',
+    borderRadius: 25,
+  },
   titleContainer: {
     paddingHorizontal: 20,
-    paddingTop: 80,
+    paddingTop: 75,
     paddingBottom: 20,
     alignItems: 'center',
   },

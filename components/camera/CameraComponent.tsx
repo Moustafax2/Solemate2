@@ -4,7 +4,6 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { CameraType } from 'expo-camera/build/Camera.types';
 
 interface CameraComponentProps {
   onImageCaptured: (imageUri: string) => Promise<void>;
@@ -12,10 +11,10 @@ interface CameraComponentProps {
 
 export default function CameraComponent({ onImageCaptured }: CameraComponentProps) {
   const [permission, requestPermission] = useCameraPermissions();
-  const [type, setType] = useState<CameraType>('back');
+  const [type, setType] = useState<'front' | 'back'>('back');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const cameraRef = useRef<any>(null);
+  const cameraRef = useRef<CameraView>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -28,8 +27,17 @@ export default function CameraComponent({ onImageCaptured }: CameraComponentProp
 
   const takePicture = async () => {
     if (cameraRef.current) {
-      const photo = await cameraRef.current.takePicture({ quality: 0.7 });
-      setCapturedImage(photo.uri);
+      try {
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.7,
+          base64: true,
+        });
+        if (photo) {
+          setCapturedImage(photo.uri);
+        }
+      } catch (error) {
+        console.error('Error taking picture:', error);
+      }
     }
   };
 
@@ -112,10 +120,8 @@ export default function CameraComponent({ onImageCaptured }: CameraComponentProp
       ) : (
         <CameraView 
           style={styles.camera} 
-          facing={type} 
+          facing={type}
           ref={cameraRef}
-          onCameraReady={() => console.log('Camera ready')}
-          onMountError={(error) => console.error('Camera error:', error)}
         >
           <View style={styles.cameraControls}>
             <TouchableOpacity style={styles.cameraButton} onPress={pickImage}>
