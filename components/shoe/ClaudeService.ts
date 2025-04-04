@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
 
@@ -18,14 +18,9 @@ export interface ShoeData {
   confidence: number;
 }
 
-// Use this shared API key for the SoleMate app (same approach as Gemini)
+// Use this shared API key for the SoleMate app
 // IMPORTANT: In a real production app, this would be better handled through a backend
-const OPENAI_API_KEY = 'KEYHERE'; // DO NOT commit real API key to GitHub
-
-// Initialize the OpenAI client
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-});
+const CLAUDE_API_KEY = 'KEYHERE'; // DO NOT commit real API key to GitHub
 
 /**
  * Convert a local image URI to a base64 string
@@ -47,9 +42,9 @@ async function imageToBase64(uri: string): Promise<string> {
 }
 
 /**
- * Identify a shoe using OpenAI's Vision API
+ * Identify a shoe using Claude's API
  */
-export async function identifyShoeWithOpenAI(imageUri: string): Promise<ShoeData> {
+export async function identifyShoeWithClaude(imageUri: string): Promise<ShoeData> {
   try {
     // Convert the image to base64
     const base64Image = await imageToBase64(imageUri);
@@ -74,28 +69,43 @@ export async function identifyShoeWithOpenAI(imageUri: string): Promise<ShoeData
     If you cannot identify the shoe, provide your best guess and set confidence accordingly.
     DO NOT include any other text in your response, only valid JSON.`;
 
-    // Make API call using GPT-4 Vision
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Image}`,
+    // Make API call to Claude
+    const response = await axios.post(
+      'https://api.anthropic.com/v1/messages',
+      {
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 1000,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: prompt
               },
-            },
-          ],
-        },
-      ],
-      max_tokens: 1000,
-    });
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: 'image/jpeg',
+                  data: base64Image
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CLAUDE_API_KEY,
+          'anthropic-version': '2023-06-01'
+        }
+      }
+    );
 
     // Extract the response text
-    const responseText = response.choices[0].message.content || "";
+    const responseText = response.data.content[0].text;
     
     // Extract JSON from the response (in case there's extra text)
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -109,7 +119,7 @@ export async function identifyShoeWithOpenAI(imageUri: string): Promise<ShoeData
     return shoeData;
     
   } catch (error) {
-    console.error('Error identifying shoe with OpenAI:', error);
+    console.error('Error identifying shoe with Claude:', error);
     
     // Return a fallback response if there's an error
     return {
@@ -128,8 +138,8 @@ export async function identifyShoeWithOpenAI(imageUri: string): Promise<ShoeData
     };
   }
 }
- 
-// Mock function, similar to before, for testing purposes when API is unavailable
+
+// For testing purposes when API is unavailable
 export function getMockShoeData(): ShoeData {
   return {
     brand: "Nike",
