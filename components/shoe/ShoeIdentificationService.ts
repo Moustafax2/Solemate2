@@ -1,6 +1,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import { identifyShoeWithGemini, getMockShoeData, ShoeData } from './GeminiService';
 import { identifyShoeWithOpenAI } from './OpenaiService';
+import { identifyShoeWithClaude } from './ClaudeService';
 
 export async function identifyShoe(imageUri: string): Promise<ShoeData> {
   try {
@@ -10,20 +11,21 @@ export async function identifyShoe(imageUri: string): Promise<ShoeData> {
       throw new Error('No internet connection');
     }
 
-    console.log('Starting identification with both OpenAI and Gemini...');
+    console.log('Starting identification with OpenAI, Gemini, and Claude...');
     
-    // Run both API calls in parallel using Promise.allSettled
-    const [openaiResult, geminiResult] = await Promise.allSettled([
+    // Run all API calls in parallel using Promise.allSettled
+    const [openaiResult, geminiResult, claudeResult] = await Promise.allSettled([
       identifyShoeWithOpenAI(imageUri),
-      identifyShoeWithGemini(imageUri)
+      identifyShoeWithGemini(imageUri),
+      identifyShoeWithClaude(imageUri)
     ]);
     
     let geminiData: ShoeData | null = null;
     let openaiData: ShoeData | null = null;
+    let claudeData: ShoeData | null = null;
     
     // Process Gemini result
     if (geminiResult.status === 'fulfilled') {
-      // Only consider the result if it's not "Unknown"
       if (geminiResult.value.brand !== "Unknown") {
         geminiData = geminiResult.value;
         console.log('Gemini successfully identified the shoe with confidence:', geminiData.confidence);
@@ -36,7 +38,6 @@ export async function identifyShoe(imageUri: string): Promise<ShoeData> {
     
     // Process OpenAI result
     if (openaiResult.status === 'fulfilled') {
-      // Only consider the result if it's not "Unknown"
       if (openaiResult.value.brand !== "Unknown") {
         openaiData = openaiResult.value;
         console.log('OpenAI successfully identified the shoe with confidence:', openaiData.confidence);
@@ -47,30 +48,52 @@ export async function identifyShoe(imageUri: string): Promise<ShoeData> {
       console.error('Error with OpenAI API:', openaiResult.reason);
     }
     
-    // If both APIs fail or return unknown, return mock data
-    if (!geminiData && !openaiData) {
-      console.log('Both APIs failed or returned Unknown, using mock data');
+    // Process Claude result
+    if (claudeResult.status === 'fulfilled') {
+      if (claudeResult.value.brand !== "Unknown") {
+        claudeData = claudeResult.value;
+        console.log('Claude successfully identified the shoe with confidence:', claudeData.confidence);
+      } else {
+        console.log('Claude returned an Unknown shoe');
+      }
+    } else {
+      console.error('Error with Claude API:', claudeResult.reason);
+    }
+    
+    // If all APIs fail or return unknown, return mock data
+    if (!geminiData && !openaiData && !claudeData) {
+      console.log('All APIs failed or returned Unknown, using mock data');
       return getMockShoeData();
     }
     
-    // If both succeeded, choose the one with higher confidence
-    if (geminiData && openaiData) {
-      console.log('Both APIs succeeded, selecting the one with higher confidence');
-      return geminiData.confidence >= openaiData.confidence ? geminiData : openaiData;
+    // Find the result with the highest confidence
+    let highestConfidenceResult: ShoeData | null = null;
+    let highestConfidence = 0;
+    
+    if (geminiData && geminiData.confidence > highestConfidence) {
+      highestConfidenceResult = geminiData;
+      highestConfidence = geminiData.confidence;
+      console.log('Gemini has highest confidence so far:', highestConfidence);
     }
     
-    // If only one succeeded, return that one
-    if (geminiData) {
-      console.log('Only Gemini succeeded, returning its result');
-      return geminiData;
+    if (openaiData && openaiData.confidence > highestConfidence) {
+      highestConfidenceResult = openaiData;
+      highestConfidence = openaiData.confidence;
+      console.log('OpenAI has highest confidence so far:', highestConfidence);
     }
     
-    if (openaiData) {
-      console.log('Only OpenAI succeeded, returning its result');
-      return openaiData;
+    if (claudeData && claudeData.confidence > highestConfidence) {
+      highestConfidenceResult = claudeData;
+      highestConfidence = claudeData.confidence;
+      console.log('Claude has highest confidence so far:', highestConfidence);
     }
     
-    // Fallback (should never reach here due to previous conditions)
+    if (highestConfidenceResult) {
+      console.log('Returning result with highest confidence:', highestConfidence);
+      return highestConfidenceResult;
+    }
+    
+    // If we get here, something unexpected happened - return mock data
     console.log('Unexpected path - using mock data as fallback');
     return getMockShoeData();
   } catch (error) {
@@ -78,9 +101,3 @@ export async function identifyShoe(imageUri: string): Promise<ShoeData> {
     throw error;
   }
 }
-
-// Future implementation could include:
-// 1. AI model selection based on user preference
-// 2. Caching results for offline use
-// 3. More advanced image preprocessing
-// 4. User feedback for improving accuracy
