@@ -10,6 +10,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ShoeProvider } from '@/components/shoe/ShoeContext';
 import { AuthProvider, useAuth } from '@/components/auth/AuthContext';
+import { CommunityFindsProvider } from '@/components/shoe/CommunityFindsContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -74,7 +75,9 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ShoeProvider>
-        <RootLayoutNav />
+        <CommunityFindsProvider>
+          <RootLayoutNav />
+        </CommunityFindsProvider>
       </ShoeProvider>
     </AuthProvider>
   );

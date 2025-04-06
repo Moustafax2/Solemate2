@@ -1,19 +1,44 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import CameraComponent from '@/components/camera/CameraComponent';
 import { useShoe } from '@/components/shoe/ShoeContext';
+import { useCommunityFinds } from '@/components/shoe/CommunityFindsContext';
+import { useAuth } from '@/components/auth/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 export default function ShoeScanner() {
-  const { captureImage, isLoading, error } = useShoe();
+  const { captureImage, isLoading, error, shoeData, imageUri } = useShoe();
+  const { addCommunityFind } = useCommunityFinds();
+  const { user } = useAuth();
   const router = useRouter();
+  const addedToCommunityRef = useRef(false);
 
   const handleImageCaptured = async (imageUri: string) => {
     await captureImage(imageUri);
   };
+
+  // Add to community finds when shoe is successfully identified
+  React.useEffect(() => {
+    if (shoeData && imageUri && user && !addedToCommunityRef.current) {
+      addCommunityFind(
+        shoeData, 
+        imageUri, 
+        user.username || 'anonymous', 
+        user.username || 'Anonymous User'
+      );
+      addedToCommunityRef.current = true;
+    }
+  }, [shoeData, imageUri, user, addCommunityFind]);
+
+  // Reset the flag when the component unmounts or when a new image is captured
+  React.useEffect(() => {
+    return () => {
+      addedToCommunityRef.current = false;
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -27,7 +52,7 @@ export default function ShoeScanner() {
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <Ionicons name="arrow-back" size={24} color="rgb(227, 41, 36)" />
+              <Ionicons name="arrow-back" size={24} color="#2196F3" />
             </TouchableOpacity>
           ),
         }}
@@ -55,33 +80,36 @@ export default function ShoeScanner() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+  },
+  backButton: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 8,
+    marginLeft: 16,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: 'white',
   },
   loadingText: {
-    color: 'white',
     marginTop: 15,
     fontSize: 16,
+    color: '#333',
   },
   errorContainer: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(200, 0, 0, 0.8)',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(229, 57, 53, 0.9)',
     padding: 15,
+    borderRadius: 10,
   },
   errorText: {
     color: 'white',
     textAlign: 'center',
-  },
-  backButton: {
-    marginLeft: 16,
-    padding: 8,
+    fontSize: 16,
   },
 }); 
