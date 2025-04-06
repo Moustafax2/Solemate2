@@ -25,6 +25,7 @@ export default function HomeScreen() {
       params: {
         shoeData: JSON.stringify(shoeData),
         imageUri: typeof imageUri === 'string' ? imageUri : imageUri.toString(),
+        isFromCommunity: 'true'
       },
     });
   };
