@@ -24,7 +24,7 @@ export interface ShoeData {
 // IMPORTANT: In a real production app, this would be better handled through a backend
 // to avoid exposing API keys in client-side code
 // DEVELOPMENT: For GitHub, replace the key with PLACEHOLDER before committing
-const API_KEY = 'KEYHERE'; // DO NOT commit real API key to GitHub
+const API_KEY = 'AIzaSyBywlfoWdWvvNYJ335SD9P103ev8wt_xK4'; // DO NOT commit real API key to GitHub
 
 // Initialize the Gemini API client
 const genAI = new GoogleGenerativeAI(API_KEY);

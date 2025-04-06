@@ -4,31 +4,42 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useCommunityFinds } from '@/components/shoe/CommunityFindsContext';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { communityFinds } = useCommunityFinds();
 
   const handleScanNow = () => {
-    router.push('/(tabs)/scanner');
+    router.push('/shoe-scanner');
   };
 
   const handleProfilePress = () => {
     router.push('/profile');
   };
 
+  const handleCommunityFindPress = (shoeData: any, imageUri: any) => {
+    // Navigate to shoe results with the selected shoe data
+    router.push({
+      pathname: '/shoe-results',
+      params: {
+        shoeData: JSON.stringify(shoeData),
+        imageUri: typeof imageUri === 'string' ? imageUri : imageUri.toString(),
+      },
+    });
+  };
+
   return (
     <ScrollView style={styles.container}>
-  
       <ThemedView style={styles.titleContainer}>
-
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.profileButton}
-          onPress={handleProfilePress}
-        >
-          <Ionicons name="person-circle-outline" size={32} color="rgb(227, 41, 36)" />
-        </TouchableOpacity>
-      </View>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.profileButton}
+            onPress={handleProfilePress}
+          >
+            <Ionicons name="person-circle-outline" size={32} color="rgb(227, 41, 36)" />
+          </TouchableOpacity>
+        </View>
         <View style={styles.titleRow}>
           <Image 
             source={require('@/assets/images/SolemateLOGO_RED.png')} 
@@ -82,27 +93,29 @@ export default function HomeScreen() {
       <ThemedView style={styles.recentFindsContainer}>
         <ThemedText type="title" style={styles.recentFindsTitle}>Community Finds</ThemedText>
         <View style={styles.recentFindsList}>
-          <View style={styles.recentFindItem}>
-            <Image 
-              source={require('@/assets/images/airforce1.png')} 
-              style={styles.sneakerImage}
-            />
-            <ThemedText style={styles.sneakerName}>Nike Air Force 1</ThemedText>
-          </View>
-          <View style={styles.recentFindItem}>
-            <Image 
-              source={require('@/assets/images/adidassamba.png')} 
-              style={styles.sneakerImage}
-            />
-            <ThemedText style={styles.sneakerName}>Adidas Samba</ThemedText>
-          </View>
-          <View style={styles.recentFindItem}>
-            <Image 
-              source={require('@/assets/images/airmax97.png')} 
-              style={styles.sneakerImage}
-            />
-            <ThemedText style={styles.sneakerName}>Nike Air Max 97</ThemedText>
-          </View>
+          {communityFinds.map((find, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.recentFindItem}
+              onPress={() => handleCommunityFindPress(find.shoeData, find.imageUri)}
+            >
+              <Image 
+                source={typeof find.imageUri === 'string' ? { uri: find.imageUri } : find.imageUri} 
+                style={styles.sneakerImage}
+              />
+              <View style={styles.sneakerInfo}>
+                <ThemedText style={styles.sneakerName}>
+                  {find.shoeData.brand} {find.shoeData.model}
+                </ThemedText>
+                <ThemedText style={styles.sneakerPrice}>
+                  ${find.shoeData.price.usd}
+                </ThemedText>
+                <ThemedText style={styles.sneakerUser}>
+                  Found by {find.username}
+                </ThemedText>
+              </View>
+            </TouchableOpacity>
+          ))}
         </View>
       </ThemedView>
 
@@ -207,17 +220,43 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   recentFindItem: {
-    alignItems: 'flex-start',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   sneakerImage: {
-    width: '100%',
-    height: 200,
+    width: 100,
+    height: 100,
     borderRadius: 10,
-    marginBottom: 10,
+    marginRight: 15,
+  },
+  sneakerInfo: {
+    flex: 1,
   },
   sneakerName: {
     fontSize: 16,
     fontWeight: '600',
+    marginBottom: 5,
+  },
+  sneakerPrice: {
+    fontSize: 14,
+    color: 'rgb(227, 41, 36)',
+    fontWeight: '500',
+    marginBottom: 5,
+  },
+  sneakerUser: {
+    fontSize: 12,
+    opacity: 0.7,
   },
   infoContainer: {
     padding: 20,
