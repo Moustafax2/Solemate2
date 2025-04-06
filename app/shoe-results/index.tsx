@@ -1,21 +1,30 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import ShoeDetailCard from '@/components/shoe/ShoeDetailCard';
 import { useShoe } from '@/components/shoe/ShoeContext';
 
 export default function ShoeResults() {
-  const { shoeData, imageUri, isLoading, error } = useShoe();
+  const { shoeData: contextShoeData, imageUri: contextImageUri, isLoading, error } = useShoe();
   const router = useRouter();
+  const params = useLocalSearchParams();
+  
+  // Parse the shoe data from params if it exists
+  const paramShoeData = params.shoeData ? JSON.parse(params.shoeData as string) : null;
+  const paramImageUri = params.imageUri as string;
+  const isFromCommunity = params.isFromCommunity === 'true';
+
+  // Use either the context data or the passed params data
+  const shoeData = isFromCommunity ? paramShoeData : contextShoeData;
+  const imageUri = isFromCommunity ? paramImageUri : contextImageUri;
 
   useEffect(() => {
-    // If no image data, redirect back to scanner
-    if (!imageUri && !isLoading) {
-      // @ts-ignore
+    // If no image data and not from community, redirect back to scanner
+    if (!imageUri && !isLoading && !isFromCommunity) {
       router.replace('/shoe-scanner');
     }
-  }, [imageUri, isLoading, router]);
+  }, [imageUri, isLoading, router, isFromCommunity]);
 
   return (
     <View style={styles.container}>
@@ -27,12 +36,12 @@ export default function ShoeResults() {
       />
       <StatusBar style="dark" />
 
-      {isLoading ? (
+      {isLoading && !isFromCommunity ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2196F3" />
           <Text style={styles.loadingText}>Analyzing your shoe...</Text>
         </View>
-      ) : error ? (
+      ) : error && !isFromCommunity ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorTitle}>Oops!</Text>
           <Text style={styles.errorMessage}>{error}</Text>
