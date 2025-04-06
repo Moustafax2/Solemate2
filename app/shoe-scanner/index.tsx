@@ -27,7 +27,7 @@ export default function ShoeScanner() {
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <Ionicons name="arrow-back" size={24} color="#2196F3" />
+              <Ionicons name="arrow-back" size={24} color="rgb(227, 41, 36)" />
             </TouchableOpacity>
           ),
         }}

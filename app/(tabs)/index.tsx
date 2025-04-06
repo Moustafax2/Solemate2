@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     padding: 10,
-    backgroundColor: 'rgba(227, 41, 36, 0.1)',
+    backgroundColor: 'rgba(36, 227, 49, 0)',
     borderRadius: 25,
   },
   titleContainer: {
