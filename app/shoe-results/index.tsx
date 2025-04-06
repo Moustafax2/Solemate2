@@ -12,7 +12,7 @@ export default function ShoeResults() {
   
   // Parse the shoe data from params if it exists
   const paramShoeData = params.shoeData ? JSON.parse(params.shoeData as string) : null;
-  const paramImageUri = params.imageUri as string;
+  const paramImageUri = params.imageUri ? (typeof params.imageUri === 'string' ? params.imageUri : JSON.parse(params.imageUri as unknown as string)) : null;
   const isFromCommunity = params.isFromCommunity === 'true';
 
   // Use either the context data or the passed params data
@@ -48,7 +48,10 @@ export default function ShoeResults() {
           <Text style={styles.errorHint}>Please try again with a clearer image or different angle.</Text>
         </View>
       ) : shoeData && imageUri ? (
-        <ShoeDetailCard shoeData={shoeData} imageUri={imageUri} />
+        <ShoeDetailCard 
+          shoeData={shoeData} 
+          imageUri={imageUri}
+        />
       ) : (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color="#2196F3" />

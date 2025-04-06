@@ -63,13 +63,24 @@ export async function identifyShoe(imageUri: string): Promise<ShoeData> {
     // If all APIs fail or return unknown, return mock data
     if (!geminiData && !openaiData && !claudeData) {
       console.log('All APIs failed or returned Unknown, using mock data');
-      const mockData = getMockShoeData();
-      
-      // Add rarity information to mock data
-      mockData.rarity = {
-        level: 'Common',
-        description: 'This is a common shoe model that is widely available in retail stores.',
-        collectorValue: mockData.price.usd * 1.2
+      const mockData: ShoeData = {
+        brand: "Unknown",
+        model: "Could not identify",
+        price: {
+          usd: 0,
+          range: "Unknown",
+        },
+        releaseYear: 0,
+        type: "Unknown",
+        colors: ["Unknown"],
+        popularity: "Unknown",
+        description: "Sorry, we couldn't identify this shoe. Please try again with a clearer image.",
+        confidence: 0,
+        rarity: {
+          level: 'Common',
+          description: 'This is a common shoe model that is widely available in retail stores.',
+          collectorValue: 0
+        }
       };
       
       return mockData;

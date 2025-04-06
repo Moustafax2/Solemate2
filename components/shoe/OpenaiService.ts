@@ -20,7 +20,7 @@ export interface ShoeData {
 
 // Use this shared API key for the SoleMate app (same approach as Gemini)
 // IMPORTANT: In a real production app, this would be better handled through a backend
-const OPENAI_API_KEY = 'KEYHERE'; // DO NOT commit real API key to GitHub
+const OPENAI_API_KEY = ''; // DO NOT commit real API key to GitHub
 
 // Initialize the OpenAI client
 const openai = new OpenAI({
