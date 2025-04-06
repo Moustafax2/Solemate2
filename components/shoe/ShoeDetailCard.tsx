@@ -21,6 +21,42 @@ export default function ShoeDetailCard({ shoeData, imageUri }: ShoeDetailCardPro
     Linking.openURL(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`);
   };
 
+  // Function to get rarity badge color
+  const getRarityColor = (level: string) => {
+    switch (level) {
+      case 'Common':
+        return '#8E8E93'; // Gray
+      case 'Uncommon':
+        return '#34C759'; // Green
+      case 'Rare':
+        return '#007AFF'; // Blue
+      case 'Ultra Rare':
+        return '#AF52DE'; // Purple
+      case 'Legendary':
+        return '#FF9500'; // Orange/Gold
+      default:
+        return '#8E8E93'; // Default gray
+    }
+  };
+
+  // Function to get rarity icon
+  const getRarityIcon = (level: string) => {
+    switch (level) {
+      case 'Common':
+        return 'star-outline';
+      case 'Uncommon':
+        return 'star';
+      case 'Rare':
+        return 'star-half';
+      case 'Ultra Rare':
+        return 'star';
+      case 'Legendary':
+        return 'diamond';
+      default:
+        return 'star-outline';
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.imageContainer}>
@@ -30,6 +66,14 @@ export default function ShoeDetailCard({ shoeData, imageUri }: ShoeDetailCardPro
             {Math.round(shoeData.confidence * 100)}% Match
           </Text>
         </View>
+        
+        {/* Rarity Badge */}
+        {shoeData.rarity && (
+          <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(shoeData.rarity.level) }]}>
+            <Ionicons name={getRarityIcon(shoeData.rarity.level)} size={16} color="white" />
+            <Text style={styles.rarityText}>{shoeData.rarity.level}</Text>
+          </View>
+        )}
       </View>
 
       <ThemedView style={styles.detailsContainer}>
@@ -65,6 +109,38 @@ export default function ShoeDetailCard({ shoeData, imageUri }: ShoeDetailCardPro
             </ThemedText>
           </View>
         </View>
+
+        {/* Rarity Section */}
+        {shoeData.rarity && (
+          <ThemedView style={styles.section}>
+            <ThemedText type="subtitle">Collector Info</ThemedText>
+            <View style={styles.rarityContainer}>
+              <View style={styles.rarityInfo}>
+                <View style={styles.rarityLabelContainer}>
+                  <Ionicons name={getRarityIcon(shoeData.rarity.level)} size={20} color={getRarityColor(shoeData.rarity.level)} />
+                  <ThemedText style={styles.rarityLabel}>Rarity:</ThemedText>
+                </View>
+                <ThemedText style={[styles.rarityValue, { color: getRarityColor(shoeData.rarity.level) }]}>
+                  {shoeData.rarity.level}
+                </ThemedText>
+              </View>
+              
+              <View style={styles.rarityInfo}>
+                <View style={styles.rarityLabelContainer}>
+                  <Ionicons name="cash-outline" size={20} color="#666" />
+                  <ThemedText style={styles.rarityLabel}>Collector Value:</ThemedText>
+                </View>
+                <ThemedText style={styles.rarityValue}>
+                  ${shoeData.rarity.collectorValue}
+                </ThemedText>
+              </View>
+              
+              <ThemedText style={styles.rarityDescription}>
+                {shoeData.rarity.description}
+              </ThemedText>
+            </View>
+          </ThemedView>
+        )}
 
         <ThemedView style={styles.section}>
           <ThemedText type="subtitle">Colors</ThemedText>
@@ -102,47 +178,68 @@ export default function ShoeDetailCard({ shoeData, imageUri }: ShoeDetailCardPro
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
   },
   imageContainer: {
     position: 'relative',
-    height: 300,
     width: '100%',
+    height: 300,
   },
   image: {
-    height: '100%',
     width: '100%',
+    height: '100%',
   },
   confidenceBadge: {
     position: 'absolute',
-    right: 10,
     top: 10,
+    right: 10,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 15,
-    paddingVertical: 5,
     paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
   },
   confidenceText: {
     color: 'white',
+    fontSize: 12,
     fontWeight: '600',
+  },
+  rarityBadge: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
+  },
+  rarityText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
   },
   detailsContainer: {
     padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    marginTop: -20,
   },
   brand: {
-    fontSize: 16,
+    fontSize: 18,
     opacity: 0.7,
   },
   model: {
     fontSize: 24,
-    marginBottom: 15,
+    marginBottom: 10,
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: 20,
+    marginBottom: 15,
   },
   price: {
-    fontSize: 24,
+    fontSize: 22,
     marginRight: 10,
   },
   priceRange: {
@@ -160,6 +257,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     marginLeft: 5,
+    fontSize: 14,
   },
   section: {
     marginBottom: 20,
@@ -171,42 +269,68 @@ const styles = StyleSheet.create({
   },
   colorBadge: {
     backgroundColor: '#f0f0f0',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 15,
     marginRight: 8,
     marginBottom: 8,
   },
   colorText: {
-    fontSize: 14,
+    fontSize: 12,
   },
   description: {
     marginTop: 10,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    marginTop: 10,
   },
   button: {
-    backgroundColor: '#666',
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#2196F3',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
     flex: 1,
-    marginRight: 10,
+    marginHorizontal: 5,
   },
   shopButton: {
-    backgroundColor: '#2196F3',
-    marginRight: 0,
+    backgroundColor: 'rgb(227, 41, 36)',
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
+    fontWeight: '600',
     marginLeft: 5,
+  },
+  rarityContainer: {
+    marginTop: 10,
+  },
+  rarityInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  rarityLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rarityLabel: {
+    marginLeft: 5,
+    fontSize: 14,
+  },
+  rarityValue: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  rarityDescription: {
+    marginTop: 10,
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: 'italic',
   },
 }); 

@@ -6,12 +6,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAuth } from '@/components/auth/AuthContext';
+import { useRecentFinds } from '@/components/shoe/RecentFindsContext';
+import { useCommunityFinds } from '@/components/shoe/CommunityFindsContext';
 
 const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { recentFinds } = useRecentFinds();
+  const { addCommunityFind } = useCommunityFinds();
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [username, setUsername] = useState(user?.username || '');
@@ -21,18 +25,21 @@ export default function ProfileScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const recentFinds = [
+  // Fallback data if no recent finds
+  const fallbackFinds = [
     { id: 1, name: 'Nike Air Force 1', image: require('@/assets/images/airforce1.png') },
     { id: 2, name: 'Adidas Samba', image: require('@/assets/images/adidassamba.png') },
     { id: 3, name: 'Nike Air Max 97', image: require('@/assets/images/airmax97.png') },
   ];
 
   const handleNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % recentFinds.length);
+    const maxIndex = recentFinds.length > 0 ? recentFinds.length - 1 : fallbackFinds.length - 1;
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % (maxIndex + 1));
   };
 
   const handlePrevious = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + recentFinds.length) % recentFinds.length);
+    const maxIndex = recentFinds.length > 0 ? recentFinds.length - 1 : fallbackFinds.length - 1;
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + (maxIndex + 1)) % (maxIndex + 1));
   };
 
   const handleSaveProfile = () => {
@@ -61,6 +68,33 @@ export default function ProfileScreen() {
     } catch (error) {
       Alert.alert('Error', 'Failed to logout');
     }
+  };
+
+  const handleShoePress = (shoeData: any, imageUri: any) => {
+    // Navigate to shoe results with the selected shoe data
+    router.push({
+      pathname: '/shoe-results',
+      params: {
+        shoeData: JSON.stringify(shoeData),
+        imageUri: typeof imageUri === 'string' ? imageUri : imageUri.toString(),
+        isFromCommunity: 'true'
+      },
+    });
+  };
+
+  const handleUploadToCommunity = (shoeData: any, imageUri: any) => {
+    if (!user) {
+      Alert.alert('Error', 'You must be logged in to share to community finds');
+      return;
+    }
+
+    addCommunityFind(
+      shoeData, 
+      imageUri, 
+      user.username || 'anonymous',
+      user.username || 'anonymous'
+    );
+    Alert.alert('Success', 'Your find has been shared with the community!');
   };
 
   return (
@@ -178,33 +212,64 @@ export default function ProfileScreen() {
 
       <ThemedView style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>Recent Finds</ThemedText>
-        <View style={styles.carouselContainer}>
-          <TouchableOpacity 
-            style={styles.carouselArrow} 
-            onPress={handlePrevious}
-          >
-            <Ionicons name="chevron-back" size={24} color="rgb(227, 41, 36)" />
-          </TouchableOpacity>
-
-          <View style={styles.carouselContent}>
-            <Image 
-              source={recentFinds[currentIndex].image} 
-              style={styles.sneakerImage}
-            />
-            <ThemedText style={styles.sneakerName}>{recentFinds[currentIndex].name}</ThemedText>
+        
+        {recentFinds.length > 0 ? (
+          <View style={styles.recentFindsContainer}>
+            {recentFinds.map((find, index) => (
+              <View key={index} style={styles.findItem}>
+                <TouchableOpacity 
+                  style={styles.findImageContainer}
+                  onPress={() => handleShoePress(find.shoeData, find.imageUri)}
+                >
+                  <Image 
+                    source={typeof find.imageUri === 'string' 
+                      ? { uri: find.imageUri } 
+                      : find.imageUri} 
+                    style={styles.findImage}
+                  />
+                </TouchableOpacity>
+                
+                <View style={styles.findDetails}>
+                  <TouchableOpacity 
+                    onPress={() => handleShoePress(find.shoeData, find.imageUri)}
+                  >
+                    <ThemedText style={styles.findName}>
+                      {find.shoeData.brand} {find.shoeData.model}
+                    </ThemedText>
+                    <ThemedText style={styles.findPrice}>
+                      ${find.shoeData.price.usd}
+                    </ThemedText>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.shareButton}
+                    onPress={() => handleUploadToCommunity(find.shoeData, find.imageUri)}
+                  >
+                    <Ionicons name="share-social-outline" size={16} color="white" />
+                    <Text style={styles.shareButtonText}>Share</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
           </View>
-
-          <TouchableOpacity 
-            style={styles.carouselArrow} 
-            onPress={handleNext}
-          >
-            <Ionicons name="chevron-forward" size={24} color="rgb(227, 41, 36)" />
-          </TouchableOpacity>
-        </View>
+        ) : (
+          <View style={styles.emptyFindsContainer}>
+            <Ionicons name="camera-outline" size={50} color="#ccc" />
+            <ThemedText style={styles.emptyFindsText}>
+              No recent finds yet. Scan a shoe to see it here!
+            </ThemedText>
+            <TouchableOpacity 
+              style={styles.scanButton}
+              onPress={() => router.push('/shoe-scanner')}
+            >
+              <Text style={styles.scanButtonText}>Scan a Shoe</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ThemedView>
 
-      <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={handleLogout}>
-        <Text style={styles.buttonText}>Logout</Text>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -213,30 +278,30 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#f5f5f5',
   },
   profileHeader: {
     alignItems: 'center',
     padding: 20,
     paddingTop: 40,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   avatarContainer: {
-    marginBottom: 15,
+    marginBottom: 10,
   },
   username: {
     fontSize: 24,
     marginBottom: 5,
   },
   email: {
-    fontSize: 16,
     opacity: 0.7,
   },
   section: {
-    padding: 20,
-    marginBottom: 20,
+    margin: 15,
+    padding: 15,
+    borderRadius: 10,
     backgroundColor: 'white',
-    borderRadius: 15,
-    marginHorizontal: 10,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -247,7 +312,16 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   sectionTitle: {
-    marginBottom: 20,
+    marginBottom: 15,
+    fontSize: 18,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+    fontSize: 16,
   },
   inputGroup: {
     marginBottom: 15,
@@ -255,75 +329,118 @@ const styles = StyleSheet.create({
   label: {
     marginBottom: 5,
     fontSize: 14,
-    opacity: 0.7,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
   },
   button: {
     backgroundColor: 'rgb(227, 41, 36)',
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 10,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
-  logoutButton: {
-    margin: 20,
-    backgroundColor: '#666',
-  },
-  carouselContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 0,
-    width: '100%',
-  },
-  carouselContent: {
-    flex: 1,
-    alignItems: 'center',
-    width: '70%',
-    paddingHorizontal: 10,
-  },
-  carouselArrow: {
-    padding: 15,
-    width: '15%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sneakerImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 10,
-    resizeMode: 'contain',
-  },
-  sneakerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   infoLabel: {
-    fontSize: 14,
-    opacity: 0.7,
+    fontSize: 16,
+    color: '#666',
   },
   infoValue: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  recentFindsContainer: {
+    width: '100%',
+  },
+  findItem: {
+    flexDirection: 'row',
+    marginBottom: 15,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  findImageContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginRight: 12,
+  },
+  findImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  findDetails: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  findName: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  findPrice: {
     fontSize: 14,
+    color: 'rgb(227, 41, 36)',
+    marginTop: 4,
+  },
+  emptyFindsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 30,
+  },
+  emptyFindsText: {
+    textAlign: 'center',
+    marginTop: 10,
+    marginBottom: 20,
+    opacity: 0.7,
+  },
+  scanButton: {
+    backgroundColor: 'rgb(227, 41, 36)',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  scanButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  logoutButton: {
+    margin: 15,
+    padding: 15,
+    borderRadius: 8,
+    backgroundColor: '#f8f8f8',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  logoutButtonText: {
+    color: 'rgb(227, 41, 36)',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgb(227, 41, 36)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginTop: 8,
+  },
+  shareButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
   },
 }); 
