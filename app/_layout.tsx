@@ -11,6 +11,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { ShoeProvider } from '@/components/shoe/ShoeContext';
 import { AuthProvider, useAuth } from '@/components/auth/AuthContext';
 import { CommunityFindsProvider } from '@/components/shoe/CommunityFindsContext';
+import { RecentFindsProvider } from '@/components/shoe/RecentFindsContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -76,7 +77,9 @@ export default function RootLayout() {
     <AuthProvider>
       <ShoeProvider>
         <CommunityFindsProvider>
-          <RootLayoutNav />
+          <RecentFindsProvider>
+            <RootLayoutNav />
+          </RecentFindsProvider>
         </CommunityFindsProvider>
       </ShoeProvider>
     </AuthProvider>

@@ -18,6 +18,11 @@ export interface ShoeData {
   popularity: string;
   description: string;
   confidence: number;
+  rarity?: {
+    level: 'Common' | 'Uncommon' | 'Rare' | 'Ultra Rare' | 'Legendary';
+    description: string;
+    collectorValue: number;
+  };
 }
 
 // Use this shared API key for the SoleMate app

@@ -4,39 +4,94 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import CameraComponent from '@/components/camera/CameraComponent';
 import { useShoe } from '@/components/shoe/ShoeContext';
-import { useCommunityFinds } from '@/components/shoe/CommunityFindsContext';
+import { useRecentFinds } from '@/components/shoe/RecentFindsContext';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 export default function ShoeScanner() {
-  const { captureImage, isLoading, error, shoeData, imageUri } = useShoe();
-  const { addCommunityFind } = useCommunityFinds();
+  const { captureImage, isLoading, error, shoeData, imageUri, resetShoeData } = useShoe();
+  const { addRecentFind, recentFinds } = useRecentFinds();
   const { user } = useAuth();
   const router = useRouter();
-  const addedToCommunityRef = useRef(false);
+  const addedToRecentRef = useRef(false);
+  const currentImageUriRef = useRef<string | null>(null);
+  const lastScannedShoeRef = useRef<string | null>(null);
+
+  // Function to check if a shoe is already in recent finds
+  const isDuplicateShoe = (shoeData: any) => {
+    if (!shoeData) return false;
+    
+    // Create a unique identifier for the shoe
+    const shoeIdentifier = `${shoeData.brand}-${shoeData.model}-${shoeData.price.usd}`;
+    
+    // Check if this exact shoe was just scanned (to prevent duplicates from multiple scans)
+    if (lastScannedShoeRef.current === shoeIdentifier) {
+      console.log('Preventing duplicate scan of the same shoe');
+      return true;
+    }
+    
+    // Check if this shoe is already in recent finds
+    const isDuplicate = recentFinds.some(find => 
+      find.shoeData.brand === shoeData.brand && 
+      find.shoeData.model === shoeData.model && 
+      find.shoeData.price.usd === shoeData.price.usd
+    );
+    
+    if (isDuplicate) {
+      console.log('Shoe already exists in recent finds');
+    }
+    
+    return isDuplicate;
+  };
 
   const handleImageCaptured = async (imageUri: string) => {
+    // Store the current image URI
+    currentImageUriRef.current = imageUri;
+    
+    // Reset the flag when a new image is captured
+    addedToRecentRef.current = false;
+    
+    // Reset shoe data before capturing a new image
+    resetShoeData();
+    
+    // Capture and identify the shoe
     await captureImage(imageUri);
   };
 
-  // Add to community finds when shoe is successfully identified
+  // Add to recent finds when shoe is successfully identified
   React.useEffect(() => {
-    if (shoeData && imageUri && user && !addedToCommunityRef.current) {
-      addCommunityFind(
-        shoeData, 
-        imageUri, 
-        user.username || 'anonymous', 
-        user.username || 'Anonymous User'
-      );
-      addedToCommunityRef.current = true;
+    if (shoeData && imageUri && !addedToRecentRef.current) {
+      console.log('Checking if shoe is a duplicate:', shoeData.brand, shoeData.model);
+      
+      // Check if this is a duplicate shoe
+      if (!isDuplicateShoe(shoeData)) {
+        console.log('Adding shoe to recent finds:', shoeData.brand, shoeData.model);
+        console.log('Image URI:', imageUri);
+        
+        // Make sure we're using the correct image URI that matches this shoe data
+        const imageToUse = currentImageUriRef.current || imageUri;
+        
+        addRecentFind(shoeData, imageToUse);
+        console.log('Added to recent finds successfully');
+        
+        // Store the identifier of this shoe to prevent duplicates from multiple scans
+        lastScannedShoeRef.current = `${shoeData.brand}-${shoeData.model}-${shoeData.price.usd}`;
+      } else {
+        console.log('Skipping duplicate shoe');
+      }
+      
+      // Set the flag to true to prevent adding the same shoe multiple times
+      addedToRecentRef.current = true;
     }
-  }, [shoeData, imageUri, user, addCommunityFind]);
+  }, [shoeData, imageUri, addRecentFind, recentFinds]);
 
-  // Reset the flag when the component unmounts or when a new image is captured
+  // Reset the flag when the component unmounts
   React.useEffect(() => {
     return () => {
-      addedToCommunityRef.current = false;
+      addedToRecentRef.current = false;
+      currentImageUriRef.current = null;
+      lastScannedShoeRef.current = null;
     };
   }, []);
 
