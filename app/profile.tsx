@@ -76,7 +76,7 @@ export default function ProfileScreen() {
       pathname: '/shoe-results',
       params: {
         shoeData: JSON.stringify(shoeData),
-        imageUri: typeof imageUri === 'string' ? imageUri : imageUri.toString(),
+        imageUri: typeof imageUri === 'string' ? imageUri : JSON.stringify(imageUri),
         isFromCommunity: 'true'
       },
     });
@@ -226,6 +226,7 @@ export default function ProfileScreen() {
                       ? { uri: find.imageUri } 
                       : find.imageUri} 
                     style={styles.findImage}
+                    resizeMode="cover"
                   />
                 </TouchableOpacity>
                 
@@ -246,7 +247,7 @@ export default function ProfileScreen() {
                     onPress={() => handleUploadToCommunity(find.shoeData, find.imageUri)}
                   >
                     <Ionicons name="share-social-outline" size={16} color="white" />
-                    <Text style={styles.shareButtonText}>Share</Text>
+                    <Text style={styles.shareButtonText}>Share With Community</Text>
                   </TouchableOpacity>
                 </View>
               </View>

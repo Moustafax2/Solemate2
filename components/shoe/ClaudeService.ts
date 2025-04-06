@@ -20,7 +20,7 @@ export interface ShoeData {
 
 // Use this shared API key for the SoleMate app
 // IMPORTANT: In a real production app, this would be better handled through a backend
-const CLAUDE_API_KEY = 'KEYHERE'; // DO NOT commit real API key to GitHub
+const CLAUDE_API_KEY = ''; // DO NOT commit real API key to GitHub
 
 /**
  * Convert a local image URI to a base64 string
