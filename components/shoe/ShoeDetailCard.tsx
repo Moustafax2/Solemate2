@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { ShoeData } from './GeminiService';
+import { useRatings } from './RatingsContext';
 
 interface ShoeDetailCardProps {
   shoeData: ShoeData;
@@ -11,6 +12,11 @@ interface ShoeDetailCardProps {
 }
 
 export default function ShoeDetailCard({ shoeData, imageUri }: ShoeDetailCardProps) {
+  const { addRating, getRating } = useRatings();
+  const shoeId = `${shoeData.brand}-${shoeData.model}-${shoeData.price.usd}`;
+  const [currentRating, setCurrentRating] = useState<number>(getRating(shoeId) || 0);
+  const [hasRated, setHasRated] = useState<boolean>(getRating(shoeId) !== null);
+
   const searchOnline = () => {
     const searchQuery = `${shoeData.brand} ${shoeData.model}`;
     Linking.openURL(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`);
@@ -55,6 +61,32 @@ export default function ShoeDetailCard({ shoeData, imageUri }: ShoeDetailCardPro
       default:
         return 'star-outline';
     }
+  };
+
+  const handleRating = async (rating: number) => {
+    setCurrentRating(rating);
+    setHasRated(true);
+    await addRating(shoeId, rating);
+  };
+
+  const renderStars = () => {
+    return (
+      <View style={styles.starsContainer}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <TouchableOpacity
+            key={star}
+            onPress={() => handleRating(star)}
+            style={styles.starButton}
+          >
+            <Ionicons
+              name={star <= currentRating ? 'star' : 'star-outline'}
+              size={24}
+              color={star <= currentRating ? '#FFD700' : '#D3D3D3'}
+            />
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
   };
 
   return (
@@ -158,6 +190,22 @@ export default function ShoeDetailCard({ shoeData, imageUri }: ShoeDetailCardPro
           <ThemedText style={styles.description}>
             {shoeData.description}
           </ThemedText>
+        </ThemedView>
+
+                {/* Rating Section */}
+        <ThemedView style={styles.ratingSection}>
+          <ThemedText type="subtitle">How'd we do?</ThemedText>
+          {hasRated ? (
+            <View style={styles.ratingContainer}>
+              <ThemedText style={styles.ratingText}>Thanks for rating!</ThemedText>
+              {renderStars()}
+            </View>
+          ) : (
+            <View style={styles.ratingContainer}>
+              <ThemedText style={styles.ratingText}>Rate our shoe identification:</ThemedText>
+              {renderStars()}
+            </View>
+          )}
         </ThemedView>
 
         <View style={styles.buttonContainer}>
@@ -332,5 +380,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontStyle: 'italic',
+  },
+  ratingSection: {
+    marginVertical: 20,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: 'rgba(227, 41, 36, 0.05)',
+  },
+  ratingContainer: {
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  ratingText: {
+    fontSize: 16,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  starButton: {
+    padding: 5,
   },
 }); 
